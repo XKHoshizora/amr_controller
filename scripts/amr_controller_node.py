@@ -21,7 +21,7 @@ class AMRController:
         self.twist.linear.y = joy_msg.axes[0] * 2.0  # 左/右
         
         # 右摇杆控制角速度
-        self.twist.angular.z = joy_msg.axes[3] * 6.2  # 旋转
+        self.twist.angular.z = joy_msg.axes[3] * 6.283186  # 旋转
 
     def run(self):
         while not rospy.is_shutdown():

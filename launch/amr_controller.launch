@@ -7,4 +7,3 @@
     </node>
     <node pkg="amr_controller" type="amr_controller_node.py" name="amr_controller_node" output="screen" />
 </launch>
-  
