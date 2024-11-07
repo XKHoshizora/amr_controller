@@ -5,5 +5,7 @@
       <param name="deadzone" value="0.05" />
       <param name="enable_feedback" value="false" />
     </node>
-    <node pkg="amr_controller" type="amr_controller_node.py" name="amr_controller_node" output="screen" />
+
+    <node pkg="amr_controller" type="amr_controller_node" name="amr_controller_node" output="screen" />
+    <!-- <node pkg="amr_controller" type="amr_controller_node.py" name="amr_controller_node" output="screen" /> -->
 </launch>
