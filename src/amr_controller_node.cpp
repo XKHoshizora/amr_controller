@@ -135,7 +135,7 @@ public:
         if (debug_mode_ && debug_pub_) {
             sensor_msgs::Joy debug_msg;
             debug_msg.header.stamp = ros::Time::now();
-            debug_msg.axes = {x_input, y_input, rot_input};
+            debug_msg.axes = {static_cast<float>(x_input), static_cast<float>(y_input), static_cast<float>(rot_input)};
             debug_pub_.publish(debug_msg);
         }
     }
