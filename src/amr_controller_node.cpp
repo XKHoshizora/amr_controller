@@ -113,18 +113,15 @@ public:
             if (debug_mode_ && std::max({std::abs(x_input), std::abs(y_input), std::abs(rot_input)}) > 0.05) {
                 ROS_INFO_STREAM("Input: " << x_input << ", " << y_input << ", " << rot_input);
                 ROS_INFO_STREAM("Speed: " << twist.linear.x << ", " << twist.linear.y
-                              << ", " << twist.angular.z);
+                            << ", " << twist.angular.z);
             }
         } else {
+            // 摇杆回中，立即发布停止命令
             twist.linear.x = 0.0;
             twist.linear.y = 0.0;
             twist.angular.z = 0.0;
-
-            if (std::abs(last_axes_[0]) > deadzone_ ||
-                std::abs(last_axes_[1]) > deadzone_ ||
-                std::abs(last_axes_[2]) > deadzone_) {
-                need_publish_ = true;
-            }
+            cmd_vel_pub_.publish(twist);  // 直接发布停止命令
+            need_publish_ = false;        // 设置标志位为false
         }
 
         twist_ = twist;

@@ -99,14 +99,12 @@ class AMRController:
                 rospy.loginfo(f"Speed: {self.twist.linear.x:.4f}, {self.twist.linear.y:.4f}, {self.twist.angular.z:.4f}")
 
         else:
+            # 摇杆回中，立即发布停止命令
             self.twist.linear.x = 0.0
             self.twist.linear.y = 0.0
             self.twist.angular.z = 0.0
-
-            if (abs(self.last_axes[0]) > self.deadzone or
-                abs(self.last_axes[1]) > self.deadzone or
-                abs(self.last_axes[2]) > self.deadzone):
-                self.need_publish = True
+            self.pub.publish(self.twist)  # 直接发布停止命令
+            self.need_publish = False     # 设置标志位为 False
 
         self.need_publish = self.need_publish or current_input
 
