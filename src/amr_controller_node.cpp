@@ -9,43 +9,65 @@ public:
         cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
         joy_sub_ = nh_.subscribe("/joy", 10, &AMRController::joyCallback, this);
 
-        has_input_ = false;
+        // 初始化上一次的轴状态
+        last_axes_[0] = 0.0;
+        last_axes_[1] = 0.0;
+        last_axes_[3] = 0.0;
+        need_publish_ = false;
     }
 
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
+        geometry_msgs::Twist twist;
+        bool current_input = false;
+
         // 检查是否有摇杆输入
         if (std::abs(joy_msg->axes[0]) > 0.1 ||
             std::abs(joy_msg->axes[1]) > 0.1 ||
             std::abs(joy_msg->axes[3]) > 0.1) {
 
-            geometry_msgs::Twist twist;
-            // 左摇杆控制线速度
+            // 有效输入，设置速度
             twist.linear.x = joy_msg->axes[1] * 2.0;  // 向前/后
             twist.linear.y = joy_msg->axes[0] * 2.0;  // 左/右
-
-            // 右摇杆控制角速度
             twist.angular.z = joy_msg->axes[3] * 6.283186;  // 旋转
+            current_input = true;
 
-            twist_ = twist;
-            has_input_ = true;
         } else {
-            // 没有输入时，将所有速度置为0
-            geometry_msgs::Twist twist;
+            // 无输入，速度置零
             twist.linear.x = 0.0;
             twist.linear.y = 0.0;
             twist.angular.z = 0.0;
 
-            twist_ = twist;
-            has_input_ = false;
+            // 检查是否是从有输入状态变为无输入状态
+            if (std::abs(last_axes_[0]) > 0.1 ||
+                std::abs(last_axes_[1]) > 0.1 ||
+                std::abs(last_axes_[3]) > 0.1) {
+                // 摇杆刚回正，需要发送一次零速度
+                need_publish_ = true;
+            }
         }
+
+        // 更新状态
+        twist_ = twist;
+        need_publish_ = need_publish_ || current_input;
+
+        // 保存当前轴状态用于下次比较
+        last_axes_[0] = joy_msg->axes[0];
+        last_axes_[1] = joy_msg->axes[1];
+        last_axes_[3] = joy_msg->axes[3];
     }
 
     void run() {
         ros::Rate rate(20);  // 20Hz
 
         while (ros::ok()) {
-            if (has_input_) {
+            if (need_publish_) {
                 cmd_vel_pub_.publish(twist_);
+                // 如果速度都为0，发送后就不需要继续发送了
+                if (twist_.linear.x == 0.0 &&
+                    twist_.linear.y == 0.0 &&
+                    twist_.angular.z == 0.0) {
+                    need_publish_ = false;
+                }
             }
 
             ros::spinOnce();
@@ -59,7 +81,8 @@ private:
     ros::Subscriber joy_sub_;
 
     geometry_msgs::Twist twist_;
-    bool has_input_;
+    bool need_publish_;
+    double last_axes_[3];  // 存储上一次的轴状态
 };
 
 int main(int argc, char** argv) {
